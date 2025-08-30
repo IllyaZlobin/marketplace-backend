@@ -3,6 +3,7 @@ import { ConfigModule as NestConfigModule, ConfigService } from '@nestjs/config'
 import Joi from 'joi';
 
 import { app, appConfigSchema } from '~/common/config/app.config';
+import { authConfig, authConfigSchema } from '~/common/config/auth.config';
 import { database, databaseConfigSchema } from '~/common/config/database.config';
 import { debugConfig, debugConfigSchema } from '~/common/config/debug.config';
 
@@ -10,14 +11,15 @@ import { debugConfig, debugConfigSchema } from '~/common/config/debug.config';
   imports: [
     NestConfigModule.forRoot({
       envFilePath: [`${process.cwd()}/.env`],
-      load: [app, database, debugConfig],
+      load: [app, authConfig, database, debugConfig],
       cache: true,
       isGlobal: true,
       expandVariables: true,
       validationSchema: Joi.object({
         ...appConfigSchema,
         ...databaseConfigSchema,
-        ...debugConfigSchema
+        ...debugConfigSchema,
+        ...authConfigSchema
       }),
       validationOptions: {
         abortEarly: true,

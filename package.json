@@ -24,7 +24,10 @@
     "migration:create": "npm run typeorm -- migration:create",
     "migration:run": "npm run typeorm -- --dataSource=src/persistence/database/datasource.ts migration:run",
     "migration:revert": "npm run typeorm -- --dataSource=src/persistence/database/datasource.ts migration:revert",
-    "schema:drop": "npm run typeorm -- --dataSource=src/persistence/database/datasource.ts schema:drop"
+    "schema:drop": "npm run typeorm -- --dataSource=src/persistence/database/datasource.ts schema:drop",
+    "seed:role": "env-cmd -- nestjs-command seed:role",
+    "seed:user": "env-cmd -- nestjs-command seed:user",
+    "seed": "env-cmd -- nestjs-command seed:role && nestjs-command seed:user"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^3.0.1",
@@ -35,11 +38,14 @@
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/typeorm": "^11.0.0",
     "@types/luxon": "^3.7.1",
+    "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "compression": "^1.8.1",
+    "crypto-js": "^4.2.0",
     "joi": "^18.0.1",
     "luxon": "^3.7.1",
+    "nestjs-command": "^3.1.5",
     "nestjs-pino": "^4.4.0",
     "pg": "^8.16.3",
     "pino-http": "^10.5.0",

@@ -9,7 +9,7 @@ import { UserEntity } from '~/persistence/entities/user.entity';
 @Entity({ name: 'roles' })
 export class RoleEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @Column({ unique: true, type: 'varchar' })
   name: string;

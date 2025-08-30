@@ -15,6 +15,9 @@ export class ResponseDto {
   })
   statusCode: number;
 
+  @ApiProperty({ type: 'string', required: false, example: 'Success' })
+  message?: string;
+
   @ApiProperty({
     name: '_metadata',
     required: true,

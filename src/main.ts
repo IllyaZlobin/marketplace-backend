@@ -24,7 +24,7 @@ async function bootstrap() {
       transform: true,
       forbidUnknownValues: true,
       skipUndefinedProperties: false,
-      errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      errorHttpStatusCode: HttpStatus.BAD_REQUEST,
       exceptionFactory: (errors: ValidationError[]) => new ValidationException(errors)
     })
   );

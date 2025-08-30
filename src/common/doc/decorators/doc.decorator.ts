@@ -1,27 +1,13 @@
 import { applyDecorators, HttpStatus } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiExtraModels,
-  ApiOperation,
-  ApiParam,
-  ApiProduces,
-  ApiQuery,
-  ApiResponse,
-  getSchemaPath
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExtraModels, ApiOperation, ApiProduces, ApiResponse, getSchemaPath } from '@nestjs/swagger';
 
 import { AppErrorStatusCode } from '~/app/errors/constants';
 import {
-  DocRequestBodyType,
   IDocAuthOptions,
   IDocDefaultOptions,
   IDocGuardOptions,
   IDocOfOptions,
   IDocOptions,
-  IDocRequestFileOptions,
-  IDocRequestOptions,
   IDocResponseFileOptions,
   IDocResponseOptions
 } from '~/common/doc/types';
@@ -37,6 +23,10 @@ export function DocDefault<T>(options: IDocDefaultOptions<T>): MethodDecorator {
       statusCode: {
         type: 'number',
         example: options.statusCode
+      },
+      message: {
+        type: 'string',
+        example: options.message
       }
     }
   };
@@ -52,7 +42,7 @@ export function DocDefault<T>(options: IDocDefaultOptions<T>): MethodDecorator {
   return applyDecorators(
     ApiExtraModels(ResponseDto),
     ApiResponse({
-      description: options.httpStatus.toString(),
+      description: options.message?.toString(),
       status: options.httpStatus,
       schema
     }),
@@ -107,6 +97,10 @@ export function DocAnyOf(httpStatus: HttpStatus, ...documents: IDocOfOptions[]):
         statusCode: {
           type: 'number',
           example: doc.statusCode ?? HttpStatus.OK
+        },
+        message: {
+          type: 'string',
+          example: doc.message
         }
       }
     };
@@ -182,76 +176,29 @@ export function Doc(options?: IDocOptions): MethodDecorator {
     }),
     DocDefault({
       httpStatus: HttpStatus.INTERNAL_SERVER_ERROR,
-      statusCode: AppErrorStatusCode.INTERNAL_SERVER_ERROR
+      message: 'Internal server error',
+      statusCode: AppErrorStatusCode.INTERNAL_SERVER_ERROR.code
     }),
     DocDefault({
       httpStatus: HttpStatus.REQUEST_TIMEOUT,
-      statusCode: AppErrorStatusCode.TIMEOUT
+      message: 'Request timeout',
+      statusCode: AppErrorStatusCode.TIMEOUT.code
     })
   );
-}
-
-export function DocRequest(options?: IDocRequestOptions) {
-  const docs: Array<ClassDecorator | MethodDecorator> = [];
-  if (options?.bodyType === DocRequestBodyType.FORM_DATA) {
-    docs.push(ApiConsumes('multipart/form-data'));
-  } else if (options?.bodyType === DocRequestBodyType.TEXT) {
-    docs.push(ApiConsumes('text/plain'));
-  } else if (options?.bodyType === DocRequestBodyType.JSON) {
-    docs.push(ApiConsumes('application/json'));
-  } else if (options?.bodyType === DocRequestBodyType.FORM_URLENCODED) {
-    docs.push(ApiConsumes('x-www-form-urlencoded'));
-  }
-  if (options?.bodyType) {
-    docs.push(
-      DocDefault({
-        httpStatus: HttpStatus.UNPROCESSABLE_ENTITY,
-        statusCode: AppErrorStatusCode.VALIDATION
-      })
-    );
-  }
-  if (options?.params) {
-    const params: MethodDecorator[] = options?.params?.map((param) => ApiParam(param));
-    docs.push(...params);
-  }
-  if (options?.queries) {
-    const queries: MethodDecorator[] = options?.queries?.map((query) => ApiQuery(query));
-    docs.push(...queries);
-  }
-  if (options?.dto) {
-    docs.push(ApiBody({ type: options?.dto }));
-  }
-  return applyDecorators(...docs);
-}
-
-export function DocRequestFile(options?: IDocRequestFileOptions) {
-  const docs: Array<ClassDecorator | MethodDecorator> = [];
-  if (options?.params) {
-    const params: MethodDecorator[] = options?.params.map((param) => ApiParam(param));
-    docs.push(...params);
-  }
-  if (options?.queries) {
-    const queries: MethodDecorator[] = options?.queries?.map((query) => ApiQuery(query));
-    docs.push(...queries);
-  }
-  if (options?.dto) {
-    docs.push(ApiBody({ type: options?.dto }));
-  }
-  return applyDecorators(ApiConsumes('multipart/form-data'), ...docs);
 }
 
 export function DocGuard(options?: IDocGuardOptions) {
   const oneOfForbidden: IDocOfOptions[] = [];
   if (options?.role) {
     oneOfForbidden.push({
-      statusCode: AppErrorStatusCode.POLICY.ROLE_FORBIDDEN,
-      message: `Sorry, your role doesn't grant access to this resource`
+      statusCode: AppErrorStatusCode.POLICY.ROLE_FORBIDDEN.code,
+      message: AppErrorStatusCode.POLICY.ROLE_FORBIDDEN.message
     });
   }
   if (options?.policy) {
     oneOfForbidden.push({
-      statusCode: AppErrorStatusCode.POLICY.ABILITY_FORBIDDEN,
-      message: `Sorry, you don't have the necessary permissions to perform this action`
+      statusCode: AppErrorStatusCode.POLICY.ABILITY_FORBIDDEN.code,
+      message: AppErrorStatusCode.POLICY.ABILITY_FORBIDDEN.message
     });
   }
   return applyDecorators(DocOneOf(HttpStatus.FORBIDDEN, ...oneOfForbidden));
@@ -263,15 +210,15 @@ export function DocAuth(options?: IDocAuthOptions) {
   if (options?.jwtRefreshToken) {
     docs.push(ApiBearerAuth('refreshToken'));
     oneOfUnauthorized.push({
-      message: 'The refresh token is unauthorized',
-      statusCode: AppErrorStatusCode.AUTH.JWT_REFRESH_TOKEN
+      message: AppErrorStatusCode.AUTH.JWT_REFRESH_TOKEN.message,
+      statusCode: AppErrorStatusCode.AUTH.JWT_REFRESH_TOKEN.code
     });
   }
   if (options?.jwtAccessToken) {
     docs.push(ApiBearerAuth('accessToken'));
     oneOfUnauthorized.push({
-      message: 'The access token is unauthorized',
-      statusCode: AppErrorStatusCode.AUTH.JWT_ACCESS_TOKEN
+      message: AppErrorStatusCode.AUTH.JWT_ACCESS_TOKEN.message,
+      statusCode: AppErrorStatusCode.AUTH.JWT_ACCESS_TOKEN.code
     });
   }
   return applyDecorators(...docs, DocOneOf(HttpStatus.UNAUTHORIZED, ...oneOfUnauthorized));
